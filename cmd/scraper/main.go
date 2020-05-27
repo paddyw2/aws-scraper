@@ -8,6 +8,7 @@ import (
     "github.com/go-scraper/pkg/logger"
 )
 
+var Verbose bool
 var TargetSite string
 var LocalFile string
 var TargetListFile string
@@ -29,6 +30,7 @@ Any IPs matching AWS-releated services are logged along with the related service
       return nil
   },
   RunE: func(cmd *cobra.Command, args []string) error {
+      logger.SetVerbose(Verbose)
       logger.Debug("Validating flags...")
 
       var err error
@@ -50,6 +52,7 @@ func Execute() {
 //  }
 //
   rootCmd.AddCommand(scrapeCmd)
+  rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Verbose logging")
   scrapeCmd.Flags().StringVarP(&TargetSite, "target", "t", "", "Target site to scrape")
   scrapeCmd.Flags().StringVarP(&LocalFile, "local", "l", "", "Local file to scrape")
   scrapeCmd.Flags().StringVarP(&TargetListFile, "target-list", "f", "", "Local file with a list of targets to scrape")
