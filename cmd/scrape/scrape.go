@@ -5,7 +5,7 @@ import (
     "errors"
     "os"
     "github.com/spf13/cobra"
-    "github.com/go-scraper/pkg/logger"
+    "github.com/go-scraper/pkg/logging"
     "github.com/go-scraper/pkg/scraper"
 )
 
@@ -31,16 +31,16 @@ Any IPs matching AWS-releated services are logged along with the related service
       return nil
   },
   RunE: func(cmd *cobra.Command, args []string) error {
-      logger.SetVerbose(Verbose)
+      logger := logging.NewLogger(Verbose)
       logger.Debug("Validating flags...")
 
       var err error
       if TargetSite != "" {
-          err = scraper.ScrapeSite(TargetSite)
+          err = scraper.ScrapeSite(TargetSite, Verbose)
       } else if TargetListFile != "" {
-          err = scraper.ScrapeSiteList(TargetListFile)
+          err = scraper.ScrapeSiteList(TargetListFile, Verbose)
       } else {
-          err = scraper.ScrapeLocalFile(LocalFile)
+          err = scraper.ScrapeLocalFile(LocalFile, Verbose)
       }
 
       return err
