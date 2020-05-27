@@ -1,6 +1,11 @@
 package scraper
 
+import (
+    "github.com/go-scraper/pkg/logger"
+)
+
 func ScrapeSite(targetSite string) error {
+    logger.Debug("Scraping site...")
     return nil
 }
 
