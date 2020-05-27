@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-    scraper.LogStuff()
+    // scraper.LogStuff()
     scraper.Execute()
 }

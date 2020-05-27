@@ -2,6 +2,6 @@ package scraper
 
 import "fmt"
 
-func LogStuff() {
+func scrape() {
     fmt.Println("Yer")
 }
