@@ -1,10 +1,9 @@
 package main
 
 import (
-    "github.com/go-scraper/cmd/scraper"
+    "github.com/go-scraper/cmd/scrape"
 )
 
 func main() {
-    // scraper.LogStuff()
-    scraper.Execute()
+    scrape.Execute()
 }

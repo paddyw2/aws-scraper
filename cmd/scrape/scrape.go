@@ -1,4 +1,4 @@
-package scraper
+package scrape
 
 import (
     "fmt"
@@ -6,6 +6,7 @@ import (
     "os"
     "github.com/spf13/cobra"
     "github.com/go-scraper/pkg/logger"
+    "github.com/go-scraper/pkg/scraper"
 )
 
 var Verbose bool
@@ -35,11 +36,11 @@ Any IPs matching AWS-releated services are logged along with the related service
 
       var err error
       if TargetSite != "" {
-          err = ScrapeSite(TargetSite)
+          err = scraper.ScrapeSite(TargetSite)
       } else if TargetListFile != "" {
-          err = ScrapeSiteList(TargetListFile)
+          err = scraper.ScrapeSiteList(TargetListFile)
       } else {
-          err = ScrapeLocalFile(LocalFile)
+          err = scraper.ScrapeLocalFile(LocalFile)
       }
 
       return err
@@ -47,10 +48,6 @@ Any IPs matching AWS-releated services are logged along with the related service
 }
 
 func Execute() {
-//  if err != nil {
-//    log.Fatalf("can't initialize zap logger: %v", err)
-//  }
-//
   rootCmd.AddCommand(scrapeCmd)
   rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Verbose logging")
   scrapeCmd.Flags().StringVarP(&TargetSite, "target", "t", "", "Target site to scrape")
