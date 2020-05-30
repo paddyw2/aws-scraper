@@ -27,6 +27,8 @@ Any IPs matching AWS-releated services are logged along with the related service
   Args: func(cmd *cobra.Command, args []string) error {
       if TargetSite == "" && LocalFile == "" && TargetListFile == "" {
           return errors.New("At least one flag must be specified - see help for details")
+      } else if TargetListFile == "" && TargetSite == "" {
+          return errors.New("The name of the site must be specified")
       }
       return nil
   },
@@ -35,12 +37,12 @@ Any IPs matching AWS-releated services are logged along with the related service
       logger.Debug("Validating flags...")
 
       var err error
-      if TargetSite != "" {
-          err = scraper.ScrapeSite(TargetSite, Verbose)
+      if LocalFile != "" {
+          err = scraper.ScrapeLocalFile(TargetSite, LocalFile, Verbose)
       } else if TargetListFile != "" {
           err = scraper.ScrapeSiteList(TargetListFile, Verbose)
       } else {
-          err = scraper.ScrapeLocalFile(LocalFile, Verbose)
+          err = scraper.ScrapeSite(TargetSite, Verbose)
       }
 
       return err

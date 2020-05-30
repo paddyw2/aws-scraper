@@ -20,25 +20,61 @@ func ScrapeSiteList(targetSiteListFilename string, verbose bool) error {
     return nil
 }
 
-func ScrapeLocalFile(localFilename string, verbose bool) error {
+func ScrapeLocalFile(hostname string, localFilename string, verbose bool) error {
     logger := logging.NewLogger(verbose)
     logger.Debug("Scraping local file...")
-    s := Scraper{logger: logger}
+    s := Scraper{logger: logger, rootHostname: hostname}
     s.localFilename = localFilename
     s.scrapeLocalFile()
+    s.markUrlsToCheck()
+    for _, el := range s.discoveredUrls {
+
+        if el.follow {
+            logger.Debug("Will check: ", el, " with: ", el.url)
+        }
+    }
     return nil
+}
+
+type DiscoveredUrl struct {
+    url string
+    hostname string
+    follow bool
+    aws bool
+    awsService string
 }
 
 type Scraper struct {
     logger *zap.SugaredLogger
+    rootHostname string
     localFilename string
     targetSiteUrl string
     targetSiteListFilename string
-    discoveredHostnames []string
-    discoveredUrls []string
+
+    discoveredUrls []*DiscoveredUrl
     discoveredIps []string
-    urlsToFollow []string
 }
+
+func (scraper *Scraper) markUrlsAsAwsService() error {
+    return nil
+}
+
+func (scraper *Scraper) markUrlsToCheck() error {
+    jsExtensionPattern := `(cloudflare|cloudfront).*\.js(\?){0,1}`
+	jsRegex := regexp.MustCompile(jsExtensionPattern)
+
+	for _, url := range scraper.discoveredUrls {
+        regexMatch := jsRegex.MatchString(url.url)
+        rootHostnameMatch, _ := regexp.MatchString(`(` + url.hostname + `).*\.js(\?){0,1}`, url.url)
+        if regexMatch || rootHostnameMatch {
+            url.follow = true
+        } else {
+            url.follow = false
+        }
+    }
+    return nil
+}
+
 
 func (scraper *Scraper) scrapeLocalFile() error {
     if scraper.localFilename == "" {
@@ -105,9 +141,8 @@ func (scraper *Scraper) extractHostnamesIps(line string) {
             }
             scraper.logger.Debug("---> url: ", url)
             scraper.logger.Debug("--> hostname: ", hostname)
-            scraper.discoveredHostnames = append(scraper.discoveredHostnames, hostname)
-            scraper.discoveredUrls = append(scraper.discoveredUrls, url)
+            newUrl := DiscoveredUrl{url: url, hostname: hostname}
+            scraper.discoveredUrls = append(scraper.discoveredUrls, &newUrl)
         }
 	}
-
 }
