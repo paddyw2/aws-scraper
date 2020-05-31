@@ -36,13 +36,14 @@ Any IPs matching AWS-releated services are logged along with the related service
       logger := logging.NewLogger(VerboseLevel)
       logger.Debug("Validating flags...")
 
+      scrapeController := scraper.NewScrapeController(logger, VerboseLevel)
       var err error
       if LocalFile != "" {
-          err = scraper.ScrapeLocalFile(TargetSite, LocalFile, VerboseLevel)
+          err = scrapeController.ScrapeLocalFile(TargetSite, LocalFile)
       } else if TargetListFile != "" {
-          err = scraper.ScrapeSiteList(TargetListFile, VerboseLevel)
+          err = scrapeController.ScrapeSiteList(TargetListFile)
       } else {
-          err = scraper.ScrapeSite(TargetSite, VerboseLevel)
+          err = scrapeController.ScrapeSite(TargetSite)
       }
 
       return err
