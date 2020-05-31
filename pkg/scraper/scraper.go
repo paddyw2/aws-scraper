@@ -35,7 +35,10 @@ func (scraper *Scraper) markUrlsAsAwsService() error {
 		if awsMatch, _ := regexp.MatchString(awsPattern, url.url); awsMatch {
 			scraper.logger.Debug("AWS: ", url.url)
 			url.aws = true
-		}
+            url.awsService = "unknown"
+		} else {
+            url.awsService = "N/A"
+        }
 	}
 	return nil
 }

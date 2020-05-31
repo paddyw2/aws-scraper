@@ -6,7 +6,7 @@ Requires:
  - go1.14.3
 
 Usage:
- - `make run`
+ - `./scraper scrape --help`
 
 ### Known issues
 

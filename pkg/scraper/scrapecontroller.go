@@ -68,17 +68,22 @@ func (sc *scrapeController) ScrapeLocalFile(hostname string, localFilename strin
 		}
 		if url.aws {
 			logger.Info("AWS: ", url.hostname)
-			fmt.Println(url.hostname)
+            outputResult(hostname, "hostname", url.hostname, url.awsService)
 		}
 	}
     if sc.displayIps {
         for _, ip := range s.discoveredIps {
             logger.Info("IP: ", ip)
-            fmt.Println(ip)
+            outputResult(hostname, "ip", ip, "N/A")
         }
     }
 	sc.currentLevel = 0
 	return nil
+}
+
+func outputResult(hostname string, resultType string, result string, awsService string) {
+    resultLine := hostname + ", " + resultType + ", " + result + ", " + awsService
+    fmt.Println(resultLine)
 }
 
 func downloadFile(filepath string, url string) error {
