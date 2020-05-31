@@ -46,6 +46,20 @@ func (sc *scrapeController) ScrapeSite(targetSite string) error {
 }
 
 func (sc *scrapeController) ScrapeSiteList(targetSiteListFilename string) error {
+
+    file, err := os.Open(targetSiteListFilename)
+
+    scraper.check(err, "File could not be opened")
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+        line := scanner.Text()
+        sc.logger.Debug("Reading: ", line)
+        // sc.parseSiteListLine()
+    }
+
+    scraper.check(scanner.Err(), "Scanner failed")
 	return nil
 }
 
