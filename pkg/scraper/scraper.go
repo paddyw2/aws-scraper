@@ -30,8 +30,9 @@ type Scraper struct {
 }
 
 func (scraper *Scraper) markUrlsAsAwsService() error {
+    awsPattern := `(aws|cloudfront|s3|amazon)`
 	for _, url := range scraper.discoveredUrls {
-		if awsMatch, _ := regexp.MatchString(`aws`, url.url); awsMatch {
+		if awsMatch, _ := regexp.MatchString(awsPattern, url.url); awsMatch {
 			scraper.logger.Debug("AWS: ", url.url)
 			url.aws = true
 		}
@@ -66,10 +67,10 @@ func (scraper *Scraper) scrapeLocalFile() error {
 	defer file.Close()
 
 	// declare chunk size
-	const maxSz = 1024
+	const maxSzBytes = 1024 * 1024
 
 	// create buffer
-	buffer := make([]byte, maxSz)
+	buffer := make([]byte, maxSzBytes)
 
 	for {
 		// read content to buffer
@@ -94,6 +95,7 @@ func (scraper *Scraper) check(e error, msg string) {
 }
 
 func (scraper *Scraper) extractHostnamesIps(line string) {
+    scraper.logger.Debug("#--> ", line)
 	ipPattern := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
 	submatchall := ipPattern.FindAllString(line, -1)
 	for _, element := range submatchall {

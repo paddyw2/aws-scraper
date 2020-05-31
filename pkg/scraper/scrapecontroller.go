@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+    "strings"
 
 	"github.com/go-scraper/pkg/logging"
 )
@@ -20,18 +21,20 @@ type ScrapeController interface {
 type scrapeController struct {
 	logger       *logging.Logger
 	verboseLevel int
+    displayIps   bool
 	maxLevel     int
 	currentLevel int
 }
 
-func NewScrapeController(logger *logging.Logger, verboseLevel int) ScrapeController {
+func NewScrapeController(logger *logging.Logger, verboseLevel int, displayIps bool) ScrapeController {
 	var maxLevel int = 1
-	sc := scrapeController{logger: logger, verboseLevel: verboseLevel, maxLevel: maxLevel, currentLevel: 0}
+    sc := scrapeController{logger: logger, verboseLevel: verboseLevel, maxLevel: maxLevel, currentLevel: 0, displayIps: displayIps}
 	return &sc
 }
 
 func (sc *scrapeController) ScrapeSite(targetSite string) error {
-	fileName := "/tmp/" + targetSite + "-source.txt"
+    cleanSiteName := strings.Replace(targetSite, "/", "", -1)
+	fileName := "/tmp/" + cleanSiteName + "-source.txt"
 	sc.logger.Info("Downloading " + targetSite + " to " + fileName)
 	err := downloadFile(fileName, targetSite)
 	if err != nil {
@@ -68,6 +71,12 @@ func (sc *scrapeController) ScrapeLocalFile(hostname string, localFilename strin
 			fmt.Println(url.hostname)
 		}
 	}
+    if sc.displayIps {
+        for _, ip := range s.discoveredIps {
+            logger.Info("IP: ", ip)
+            fmt.Println(ip)
+        }
+    }
 	sc.currentLevel = 0
 	return nil
 }

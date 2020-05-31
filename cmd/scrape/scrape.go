@@ -15,6 +15,7 @@ var VerboseLevel int = 0
 var TargetSite string
 var LocalFile string
 var TargetListFile string
+var DisplayIps bool
 
 var rootCmd = &cobra.Command{
 	Use:   "scraper",
@@ -43,7 +44,7 @@ func ScrapeCommand(cmd *cobra.Command, args []string) error {
     logger := logging.NewLogger(VerboseLevel)
     logger.Debug("Validating flags...")
 
-    scrapeController := scraper.NewScrapeController(logger, VerboseLevel)
+    scrapeController := scraper.NewScrapeController(logger, VerboseLevel, DisplayIps)
     var err error
     if LocalFile != "" {
         err = scrapeController.ScrapeLocalFile(TargetSite, LocalFile)
@@ -58,10 +59,11 @@ func ScrapeCommand(cmd *cobra.Command, args []string) error {
 
 func Execute() {
 	rootCmd.AddCommand(scrapeCmd)
-	rootCmd.PersistentFlags().CountVarP(&VerboseLevel, "verbose", "v", "Verbose logging level 1")
+	rootCmd.PersistentFlags().CountVarP(&VerboseLevel, "verbose", "v", "Verbose logging (-v, -vv, -vvv) ")
 	scrapeCmd.Flags().StringVarP(&TargetSite, "target", "t", "", "Target site to scrape")
 	scrapeCmd.Flags().StringVarP(&LocalFile, "local", "l", "", "Local file to scrape")
 	scrapeCmd.Flags().StringVarP(&TargetListFile, "target-list", "f", "", "Local file with a list of targets to scrape")
+	scrapeCmd.Flags().BoolVarP(&DisplayIps, "display-ips", "d", false, "Display raw ip addresses discovered")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
