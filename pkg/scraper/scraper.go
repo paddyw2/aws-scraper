@@ -10,27 +10,31 @@ import (
     "github.com/go-scraper/pkg/tlds"
 )
 
-func ScrapeSite(targetSite string, verbose bool) error {
-    logger := logging.NewLogger(verbose)
+func ScrapeSite(targetSite string, verboseLevel int) error {
+    logger := logging.NewLogger(verboseLevel)
     logger.Debug("Scraping site...")
     return nil
 }
 
-func ScrapeSiteList(targetSiteListFilename string, verbose bool) error {
+func ScrapeSiteList(targetSiteListFilename string, verboseLevel int) error {
     return nil
 }
 
-func ScrapeLocalFile(hostname string, localFilename string, verbose bool) error {
-    logger := logging.NewLogger(verbose)
+func ScrapeLocalFile(hostname string, localFilename string, verboseLevel int) error {
+    logger := logging.NewLogger(verboseLevel)
     logger.Debug("Scraping local file...")
     s := Scraper{logger: logger, rootHostname: hostname}
     s.localFilename = localFilename
     s.scrapeLocalFile()
     s.markUrlsToCheck()
+    s.markUrlsAsAwsService()
     for _, el := range s.discoveredUrls {
 
         if el.follow {
             logger.Debug("Will check: ", el, " with: ", el.url)
+        }
+        if el.aws {
+            logger.Info("AWS: ", el.url)
         }
     }
     return nil
@@ -56,6 +60,12 @@ type Scraper struct {
 }
 
 func (scraper *Scraper) markUrlsAsAwsService() error {
+    for _, url := range scraper.discoveredUrls {
+        if awsMatch, _ := regexp.MatchString(`aws`, url.url); awsMatch {
+            scraper.logger.Debug("AWS: ", url.url)
+            url.aws = true
+        }
+    }
     return nil
 }
 
@@ -115,7 +125,7 @@ func (scraper *Scraper) extractHostnamesIps(line string) {
     // 1. in a web page, we only care about matches starting with one of "'/ (i.e http://, or "www...)
     // 2. next comes the sub domains pattern, which allows 1 or more valid subdomains (i.e. www.my-site, or just my-site)
     // 3. all hostnames must end with a period followed by valid tld characters (i.e. www.my-site.com)
-    hostnamePattern := `["'/]([a-zA-Z0-9]+(-[a-zA-Z0-9]+)*)+(\.([a-zA-Z]+(-[a-zA-Z]+)*))+`
+    hostnamePattern := `["'/]([a-zA-Z0-9]+(-[a-zA-Z0-9]+)*\.)+[a-zA-Z]+`
 	hostnameRegex := regexp.MustCompile(hostnamePattern)
     // urlPattern explanation:
     // 1. url must start with hostname
@@ -124,23 +134,26 @@ func (scraper *Scraper) extractHostnamesIps(line string) {
     // 3. the urls we care about must target some file, so this pattern of legal url characters must
     // end with . followed by lower case alphabet characters to mark a file extension (i.e. .js)
     // 4. lastly, the url may have 0 or 1 options after it (i.e. ?v=3411234)
-    urlPattern := hostnamePattern + `(/[a-zA-Z0-9-_&=\.%?/]*)*(\.[a-z]+)(\?[a-zA-Z0-9-_&=\.%?]*){0,1}`
+    urlPattern := hostnamePattern + `((/[a-zA-Z0-9-_&=\.%?/]*)*(\.[a-z]+)(\?[a-zA-Z0-9-_&=\.%?]*){0,1}){0,1}`
 	urlRegex := regexp.MustCompile(urlPattern)
     submatchall = urlRegex.FindAllString(line, -1)
-	for _, raw_url := range submatchall {
-        hostname := hostnameRegex.FindString(raw_url)
+	for _, rawUrl := range submatchall {
+        rawHostname := hostnameRegex.FindString(rawUrl)
         tldPattern := regexp.MustCompile(`\.([a-zA-Z]+(-[a-zA-Z]+)*)$`)
-        tldMatch := tldPattern.FindString(hostname)
+        tldMatch := tldPattern.FindString(rawHostname)
         if _, ok := tlds.TLDS[tldMatch[1:]]; ok {
             // remove leading /'"
             var url string
-            if raw_url[0] == '"' || raw_url[0] == '\'' || raw_url[0] == '/' {
-                url = raw_url[1:]
+            var hostname string
+            if rawUrl[0] == '"' || rawUrl[0] == '\'' || rawUrl[0] == '/' {
+                url = rawUrl[1:]
+                hostname = rawHostname[1:]
             } else {
-                url = raw_url
+                url = rawUrl
+                hostname = rawHostname
             }
             scraper.logger.Debug("---> url: ", url)
-            scraper.logger.Debug("--> hostname: ", hostname)
+            scraper.logger.Debug("---> hostname: ", hostname)
             newUrl := DiscoveredUrl{url: url, hostname: hostname}
             scraper.discoveredUrls = append(scraper.discoveredUrls, &newUrl)
         }
