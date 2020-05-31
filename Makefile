@@ -9,3 +9,6 @@ run:
 
 run-build:
 	./bin/scraper
+
+format:
+	gofmt -w .
