@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
     "strings"
+    "bufio"
 
 	"github.com/go-scraper/pkg/logging"
 )
@@ -32,6 +33,13 @@ func NewScrapeController(logger *logging.Logger, verboseLevel int, displayIps bo
 	return &sc
 }
 
+func (sc *scrapeController) check(e error, msg string) {
+	if e != nil {
+		sc.logger.Fatal(msg, e)
+		panic(e)
+	}
+}
+
 func (sc *scrapeController) ScrapeSite(targetSite string) error {
     cleanSiteName := strings.Replace(targetSite, "/", "", -1)
 	fileName := "/tmp/" + cleanSiteName + "-source.txt"
@@ -49,7 +57,7 @@ func (sc *scrapeController) ScrapeSiteList(targetSiteListFilename string) error 
 
     file, err := os.Open(targetSiteListFilename)
 
-    scraper.check(err, "File could not be opened")
+    sc.check(err, "File could not be opened")
     defer file.Close()
 
     scanner := bufio.NewScanner(file)
@@ -59,7 +67,7 @@ func (sc *scrapeController) ScrapeSiteList(targetSiteListFilename string) error 
         // sc.parseSiteListLine()
     }
 
-    scraper.check(scanner.Err(), "Scanner failed")
+    sc.check(scanner.Err(), "Scanner failed")
 	return nil
 }
 
