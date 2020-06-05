@@ -13,6 +13,8 @@ import (
 	"github.com/paddyw2/aws-scraper/pkg/logging"
 )
 
+var OutputHeaderPrinted = false
+
 type ScrapeController interface {
 	ScrapeSite(targetSite string) error
 	ScrapeLocalFile(hostname string, localFilename string) error
@@ -92,18 +94,28 @@ func (sc *scrapeController) ScrapeLocalFile(hostname string, localFilename strin
 			}
 		}
 		if url.aws {
+            outputResultHeader()
 			logger.Info("AWS: ", url.hostname)
             outputResult(hostname, "hostname", url.hostname, url.awsService)
 		}
 	}
     if sc.displayIps {
         for _, ip := range s.discoveredIps {
+            outputResultHeader()
             logger.Info("IP: ", ip)
             outputResult(hostname, "ip", ip, "N/A")
         }
     }
 	sc.currentLevel = 0
 	return nil
+}
+
+func outputResultHeader() {
+    headerLine := "hostname, resultType, result, awsService"
+    if !OutputHeaderPrinted {
+        fmt.Println(headerLine)
+        OutputHeaderPrinted = true
+    }
 }
 
 func outputResult(hostname string, resultType string, result string, awsService string) {

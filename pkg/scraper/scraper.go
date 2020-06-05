@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/paddyw2/urlextract"
 
@@ -32,14 +33,21 @@ type Scraper struct {
 }
 
 func (scraper *Scraper) markUrlsAsAwsService() error {
-    awsPattern := `(aws|cloudfront|s3|amazon)`
 	for _, url := range scraper.discoveredUrls {
-		if awsMatch, _ := regexp.MatchString(awsPattern, url.url); awsMatch {
-			scraper.logger.Debug("AWS: ", url.url)
-			url.aws = true
+        url.aws = true
+        if strings.Contains(url.url, "cloudfront") {
+            url.awsService = "cloudfront"
+        } else if strings.Contains(url.url, "execute-api") {
+            url.awsService = "apigateway"
+        } else if strings.Contains(url.url, "s3") {
+            url.awsService = "s3"
+        } else if strings.Contains(url.url, "elb") {
+            url.awsService = "elb"
+        } else if strings.Contains(url.url, "amazon") || strings.Contains(url.url, "aws") {
             url.awsService = "unknown"
-		} else {
+        } else {
             url.awsService = "N/A"
+            url.aws = false
         }
 	}
 	return nil
