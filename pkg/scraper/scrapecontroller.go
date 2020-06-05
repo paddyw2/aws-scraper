@@ -41,7 +41,9 @@ func (sc *scrapeController) check(e error, msg string) {
 }
 
 func (sc *scrapeController) ScrapeSite(targetSite string) error {
-    cleanSiteName := strings.Replace(targetSite, "/", "", -1)
+    cleanSiteName := strings.Replace(targetSite, "http://", "", -1)
+    cleanSiteName = strings.Replace(targetSite, "https://", "", -1)
+    cleanSiteName = strings.Replace(cleanSiteName, "/", "", -1)
 	fileName := "/tmp/" + cleanSiteName + "-source.txt"
 	sc.logger.Info("Downloading " + targetSite + " to " + fileName)
 	err := downloadFile(fileName, targetSite)
@@ -64,7 +66,8 @@ func (sc *scrapeController) ScrapeSiteList(targetSiteListFilename string) error 
     for scanner.Scan() {
         line := scanner.Text()
         sc.logger.Debug("Reading: ", line)
-        // sc.parseSiteListLine()
+        targetSite := strings.TrimSpace(line)
+        sc.ScrapeSite(targetSite)
     }
 
     sc.check(scanner.Err(), "Scanner failed")
