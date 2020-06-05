@@ -46,6 +46,7 @@ func (scraper *Scraper) markUrlsAsAwsService() error {
         } else if strings.Contains(url.url, "amazon") || strings.Contains(url.url, "aws") {
             url.awsService = "unknown"
         } else {
+            scraper.logger.Debug("Non-AWS hostname: ", url.url)
             url.awsService = "N/A"
             url.aws = false
         }
@@ -108,7 +109,7 @@ func (scraper *Scraper) check(e error, msg string) {
 }
 
 func (scraper *Scraper) extractHostnamesIps(line string) {
-    urlextractor := urlextract.NewExtractor(true)
+    urlextractor := urlextract.NewExtractor()
     urlextractor.ExtractHostnamesIps(line)
     for _, ip := range urlextractor.Ips {
 	    scraper.discoveredIps = append(scraper.discoveredIps, ip)
