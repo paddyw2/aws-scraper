@@ -1,4 +1,4 @@
-# Go Scraper
+# AWS Scraper
 
 Scrapes hostnames from website HTML and JS and checks for AWS-related hostnames.
 
