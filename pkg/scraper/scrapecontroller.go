@@ -10,7 +10,7 @@ import (
     "strings"
     "bufio"
 
-	"github.com/go-scraper/pkg/logging"
+	"github.com/paddyw2/aws-scraper/pkg/logging"
 )
 
 type ScrapeController interface {

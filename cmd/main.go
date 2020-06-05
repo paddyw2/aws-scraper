@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/go-scraper/cmd/scrape"
+	"github.com/paddyw2/aws-scraper/cmd/scrape"
 )
 
 func main() {

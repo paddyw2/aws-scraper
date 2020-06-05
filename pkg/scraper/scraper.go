@@ -6,13 +6,15 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/go-scraper/pkg/logging"
-	"github.com/go-scraper/pkg/tlds"
+	"github.com/paddyw2/urlextract"
+
+	"github.com/paddyw2/aws-scraper/pkg/logging"
 )
 
 type DiscoveredUrl struct {
 	url        string
-	hostname   string
+    hostname   string
+    tld        string
 	follow     bool
 	aws        bool
 	awsService string
@@ -98,48 +100,13 @@ func (scraper *Scraper) check(e error, msg string) {
 }
 
 func (scraper *Scraper) extractHostnamesIps(line string) {
-    scraper.logger.Debug("#--> ", line)
-	ipPattern := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
-	submatchall := ipPattern.FindAllString(line, -1)
-	for _, element := range submatchall {
-		scraper.logger.Debug("--> ip: ", element)
-		scraper.discoveredIps = append(scraper.discoveredIps, element)
-	}
-	// hostnamePattern explanation:
-	// 1. in a web page, we only care about matches starting with one of "'/ (i.e http://, or "www...)
-	// 2. next comes the sub domains pattern, which allows 1 or more valid subdomains (i.e. www.my-site, or just my-site)
-	// 3. all hostnames must end with a period followed by valid tld characters (i.e. www.my-site.com)
-	hostnamePattern := `["'/]([a-zA-Z0-9]+(-[a-zA-Z0-9]+)*\.)+[a-zA-Z]+`
-	hostnameRegex := regexp.MustCompile(hostnamePattern)
-	// urlPattern explanation:
-	// 1. url must start with hostname
-	// 2. a url can then have optional paths or options, so allow a /followed by any combination of
-	// legal url characters
-	// 3. the urls we care about must target some file, so this pattern of legal url characters must
-	// end with . followed by lower case alphabet characters to mark a file extension (i.e. .js)
-	// 4. lastly, the url may have 0 or 1 options after it (i.e. ?v=3411234)
-	urlPattern := hostnamePattern + `((/[a-zA-Z0-9-_&=\.%?/]*)*(\.[a-z]+)(\?[a-zA-Z0-9-_&=\.%?]*){0,1}){0,1}`
-	urlRegex := regexp.MustCompile(urlPattern)
-	submatchall = urlRegex.FindAllString(line, -1)
-	for _, rawUrl := range submatchall {
-		rawHostname := hostnameRegex.FindString(rawUrl)
-		tldPattern := regexp.MustCompile(`\.([a-zA-Z]+(-[a-zA-Z]+)*)$`)
-		tldMatch := tldPattern.FindString(rawHostname)
-		if _, ok := tlds.TLDS[tldMatch[1:]]; ok {
-			// remove leading /'"
-			var url string
-			var hostname string
-			if rawUrl[0] == '"' || rawUrl[0] == '\'' || rawUrl[0] == '/' {
-				url = rawUrl[1:]
-				hostname = rawHostname[1:]
-			} else {
-				url = rawUrl
-				hostname = rawHostname
-			}
-			scraper.logger.Info("---> url: ", url)
-			scraper.logger.Info("---> hostname: ", hostname)
-			newUrl := DiscoveredUrl{url: url, hostname: hostname}
-			scraper.discoveredUrls = append(scraper.discoveredUrls, &newUrl)
-		}
-	}
+    urlextractor := urlextract.NewExtractor(true)
+    urlextractor.ExtractHostnamesIps(line)
+    for _, ip := range urlextractor.Ips {
+	    scraper.discoveredIps = append(scraper.discoveredIps, ip)
+    }
+    for _, url := range urlextractor.Urls {
+        discoveredUrl := DiscoveredUrl{url: url.Url, hostname: url.Hostname, tld: url.Tld}
+	    scraper.discoveredUrls = append(scraper.discoveredUrls, &discoveredUrl)
+    }
 }

@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/go-scraper/pkg/logging"
-	"github.com/go-scraper/pkg/scraper"
+	"github.com/paddyw2/aws-scraper/pkg/logging"
+	"github.com/paddyw2/aws-scraper/pkg/scraper"
 )
 
 var VerboseLevel int = 0
